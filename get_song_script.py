@@ -179,8 +179,13 @@ if __name__ == '__main__':
 
 
     titles = [
-        "Hello Pakistan"
+    "Karachi Nights",
+    "Lahore Dreams",
+    "Sindhi Serenade",
+    "Islamabad Impressions",
+    "Rivers of Punjab"
     ]
+
 
     id_list = []
 
@@ -215,7 +220,7 @@ if __name__ == '__main__':
         # download(data[1]['id'], f"../songs_generated/{folder}")
 
         
-
+    print(id_list)
         
     
     
