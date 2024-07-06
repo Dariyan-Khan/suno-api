@@ -3,6 +3,8 @@ import requests
 from playwright.sync_api import sync_playwright, Page, expect
 import re
 import os
+from copy import deepcopy
+from tqdm import tqdm
 
 # replace your vercel domain
 base_url = 'http://localhost:3000'
@@ -21,6 +23,11 @@ def extend_audio(payload):
 
 def generate_audio_by_prompt(payload):
     url = f"{base_url}/api/generate"
+    response = requests.post(url, json=payload, headers={'Content-Type': 'application/json'})
+    return response.json()
+
+def custom_generate_audio_by_prompt(payload):
+    url = f"{base_url}/api/custom_generate"
     response = requests.post(url, json=payload, headers={'Content-Type': 'application/json'})
     return response.json()
 
@@ -68,7 +75,7 @@ def generate_whole_song(clip_id):
 
 
 
-def download(song: str, path: str = "../songs_generated",) -> str:
+def download(song, path= "../songs_generated", title=None) -> str:
         """
         Downloads a Suno song to a specified location.
 
@@ -103,11 +110,29 @@ def download(song: str, path: str = "../songs_generated",) -> str:
         
         # assert False
 
-
-        file = os.path.join(path, f"{id}.mp3")
+        if title is None:
+            title = deepcopy(id)
+            file = os.path.join(path, f"{title}.mp3")
         with open(file, "wb") as f:
             f.write(response.content)
         print(f"audio file: {file}")
+    
+    
+# def download(ids, folder, base_title):
+#     if not os.path.exists(f"../songs_generated/{folder}"):
+#         os.makedirs(f"../songs_generated/{folder}")
+
+#     for i, id in enumerate(ids):
+#         download_inner(id, f"../songs_generated/{folder}", title=f"base_title_{i}")
+    
+
+def add_song_to_csv_file(id, title, prompt, date):
+    song_url = f"https://cdn1.suno.ai/{id}.mp3"
+    with open(f"../songs_generated/songs.csv", "a") as f:
+        f.write(f"{id}, {title},{prompt}, {date}, {song_url}\n")
+
+
+
 
 
 
@@ -131,9 +156,71 @@ if __name__ == '__main__':
     #     # sleep 5s
     #     time.sleep(5)
 
-    test_id = "81ec34ab-da9f-478e-8266-526035b0cb51"
 
-    download(test_id)
+
+
+    # test_id = "81ec34ab-da9f-478e-8266-526035b0cb51"
+
+    # test_info = get_audio_information(test_id)
+
+    # print(test_info)
+
+    #download(test_id)
 
     # download_song_inner()
+
+
+
+
+    country = "Pakistan"
+    folder = country.lower()
+
+    # assert False
+
+
+    titles = [
+        "Hello Pakistan"
+    ]
+
+    id_list = []
+
+    for base_title in tqdm(titles):
+
+        data = custom_generate_audio_by_prompt({
+            "prompt": "[Instrumental]",
+            "tags": "lofi pakistani dhol sitar flutes",
+            "title": base_title,
+            "make_instrumental": False,
+            "wait_audio": True
+        })
+
+        #ids = f"{data[0]['id']},{data[1]['id']}"
+    
+        id_list.append(data[0]['id'])
+        id_list.append(data[1]['id'])
+
+        # sleep 2 mins
+        #time.sleep(60)
+
+        if not os.path.exists(f"../songs_generated/{folder}"):
+            os.makedirs(f"../songs_generated/{folder}")
+
+
+
+        add_song_to_csv_file(data[0]['id'], f"{data[0]['title']}_0", data[0]['prompt'], data[0]['created_at'])
+        add_song_to_csv_file(data[1]['id'], f"{data[1]['title']}_1", data[1]['prompt'], data[1]['created_at'])
+
+
+        # download(data[0]['id'], f"../songs_generated/{folder}")
+        # download(data[1]['id'], f"../songs_generated/{folder}")
+
+        
+
+        
+    
+    
+    #download("6de8500d-044a-4d91-b1ed-20d8292321ec", "../songs_generated/pakistan",)
+
+
+
 
